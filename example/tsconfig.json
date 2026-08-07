@@ -1,0 +1,6 @@
+{
+  "extends": ["../tsconfig", "../engage-core/tsconfig"],
+  "compilerOptions": {
+    // Avoid expo-cli auto-generating a tsconfig
+  }
+}
