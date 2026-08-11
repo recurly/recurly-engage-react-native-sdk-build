@@ -89,5 +89,8 @@ nitrogen/
 **/*.tgz
 .npmrc
 **/coverage
+
+# generated at build/test time from package.json (see engage-core/version.js)
+engage-core/src/version.ts
 # Claude Code local config / commands (internal tooling — not for public repo)
 .claude/

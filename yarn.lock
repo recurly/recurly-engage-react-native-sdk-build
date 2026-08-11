@@ -3559,7 +3559,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@recurly/engage-core@^2.0.1, @recurly/engage-core@workspace:engage-core":
+"@recurly/engage-core@^3.0.0, @recurly/engage-core@workspace:engage-core":
   version: 0.0.0-use.local
   resolution: "@recurly/engage-core@workspace:engage-core"
   dependencies:
@@ -3580,7 +3580,7 @@ __metadata:
     "@evilmartians/lefthook": ^1.5.0
     "@react-native-async-storage/async-storage": ^2.1.1
     "@react-native/eslint-config": ^0.73.1
-    "@recurly/engage-core": ^2.0.1
+    "@recurly/engage-core": ^3.0.0
     "@release-it/conventional-changelog": ^9.0.2
     "@types/jest": ^29.5.5
     "@types/react": ^18.2.44
