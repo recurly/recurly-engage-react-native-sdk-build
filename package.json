@@ -67,7 +67,8 @@
   },
   "homepage": "https://github.com/recurly/recurly-engage-react-native-sdk-build#readme",
   "publishConfig": {
-    "registry": "https://registry.npmjs.org/"
+    "registry": "https://registry.npmjs.org/",
+    "access": "public"
   },
   "devDependencies": {
     "@commitlint/config-conventional": "^17.0.2",
