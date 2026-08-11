@@ -1,6 +1,6 @@
 {
   "name": "@recurly/engage-core",
-  "version": "2.0.4",
+  "version": "3.0.0",
   "description": "Recurly Engage core SDK",
   "main": "dist/index.js",
   "module": "dist/index.js",
@@ -10,10 +10,11 @@
     "src"
   ],
   "scripts": {
-    "build": "rm -rf dist && tsc",
+    "generate:version": "node version.js write",
+    "build": "node version.js write && rm -rf dist && tsc",
     "pack": "npm pack",
-    "test": "jest",
-    "test:coverage": "jest --coverage"
+    "test": "node version.js write && jest",
+    "test:coverage": "node version.js write && jest --coverage"
   },
   "jest": {
     "preset": "ts-jest",

@@ -1,6 +1,6 @@
 {
   "name": "@recurly/engage-react-native",
-  "version": "2.0.9",
+  "version": "3.0.0",
   "description": "React Native SDK for Recurly Engage",
   "source": "./src/index.tsx",
   "main": "./lib/commonjs/index.js",
@@ -42,8 +42,9 @@
     "tvos": "bash scripts/apple-select.sh --workspace=tv",
     "atv": "bash scripts/android-select.sh --workspace=tv",
     "build": "npm run build --workspace=engage-core && yarn",
-    "test": "jest",
-    "typecheck": "tsc",
+    "generate:version": "node engage-core/version.js write",
+    "test": "npm run generate:version && jest",
+    "typecheck": "npm run generate:version && tsc",
     "lint": "eslint \"**/*.{js,ts,tsx}\"",
     "clean": "del-cli lib",
     "prepare": "bob build",
@@ -211,7 +212,7 @@
   },
   "dependencies": {
     "@react-native-async-storage/async-storage": "^2.1.1",
-    "@recurly/engage-core": "^2.0.1",
+    "@recurly/engage-core": "^3.0.0",
     "expo-device": "^7.0.2",
     "expo-video": "^2.0.5"
   }

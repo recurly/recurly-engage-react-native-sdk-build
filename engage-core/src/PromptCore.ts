@@ -18,8 +18,9 @@ import type {
   LinkedString,
 } from './types';
 import { LocalStorageUtils } from './localStorageUtils';
+import { version } from './version';
 
-console.log(`@recurly/engage-core 2.0.4`);
+console.log(`@recurly/engage-core ${version}`);
 
 const InitPingInterval = 60 * 1000;
 const MaxPingBackoffSeconds = 3084;
