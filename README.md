@@ -1,3 +1,36 @@
+# Recurly Engage React Native SDK
+
+React Native SDK for rendering Recurly Engage prompts (modals, banners, interstitials, inline zones) and reporting user interaction events.
+
+## Installation
+
+Published on the public npm registry — no authentication token required.
+
+```bash
+npm install @recurly/engage-core @recurly/engage-react-native
+# or
+yarn add @recurly/engage-core @recurly/engage-react-native
+```
+
+## Quickstart
+
+```javascript
+import { PromptProvider, PromptOverlay } from '@recurly/engage-react-native';
+
+export default function App() {
+  return (
+    <PromptProvider appId="YOUR_APP_ID" userId="INITIAL_USER_ID">
+      <AppRoot />
+      <PromptOverlay onEvent={(result) => { /* handle interaction */ }} />
+    </PromptProvider>
+  );
+}
+```
+
+See [docs/api.md](./docs/api.md) for the full integration guide — triggering prompts, inline zones, custom rendering, and event handling.
+
+---
+
 # How to build and run
 
 The `@recurly/engage-react-native` library is created from the `npx create-react-native-library` tool. It generates the `example` folder for mobile devices.
@@ -53,16 +86,6 @@ yarn tv:android
 
 # or, run the tvOS example app
 yarn tv:tvos
-```
-
-## Installation
-
-The SDK is published on the public npm registry — no authentication token required.
-
-```bash
-npm install @recurly/engage-core @recurly/engage-react-native
-# or
-yarn add @recurly/engage-core @recurly/engage-react-native
 ```
 
 ## Launch example-tv app in a physical Apple TV

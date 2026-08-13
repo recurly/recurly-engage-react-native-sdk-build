@@ -6,6 +6,6 @@ pre-commit:
       run: npx eslint {staged_files}
     types:
       glob: "*.{js,ts, jsx, tsx}"
-      run: node engage-core/version.js write && npx tsc
+      run: node engage-core/version.js write && node version.js write && npx tsc
     tests:
       run: yarn test

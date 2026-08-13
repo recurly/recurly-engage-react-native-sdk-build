@@ -385,11 +385,13 @@ interface PromptResult {
   }}
 />
 
-// Perform the same for modals
-{displayPrompt(showModal, pathItem, (result) => {
-  // utilize same analytics code above
-  setShowModal(false);
-})}
+// Modal prompts (interstitial, popup, bottom banner) are rendered automatically
+// by <PromptOverlay />. Use the same analytics code inside its onEvent callback:
+<PromptOverlay
+  onEvent={(result: PromptResult) => {
+    // utilize same analytics code above
+  }}
+/>
 ```
 
 ## Deeplink
