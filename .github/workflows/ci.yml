@@ -48,8 +48,13 @@ jobs:
     permissions:
       contents: write
       packages: write
+    env:
+      SLACK_WEBHOOK: ${{ secrets.SLACK_RELEASE_WEBHOOK_URL }}
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
 
       - name: Set up Node.js
         uses: actions/setup-node@v7
@@ -93,6 +98,7 @@ jobs:
           else
             echo "is_new=true" >> "$GITHUB_OUTPUT"
           fi
+          echo "prev=$(git tag -l 'v*' --sort=-v:refname | head -n1)" >> "$GITHUB_OUTPUT"
 
       - name: Create GitHub Release
         if: steps.rel.outputs.is_new == 'true'
@@ -100,3 +106,14 @@ jobs:
         with:
           tag_name: v${{ steps.rel.outputs.version }}
           generate_release_notes: true
+
+      - name: Post release notes to Slack
+        if: steps.rel.outputs.is_new == 'true' && env.SLACK_WEBHOOK != ''
+        run: |
+          VERSION="${{ steps.rel.outputs.version }}"
+          PREV="${{ steps.rel.outputs.prev }}"
+          REPO="${{ github.repository }}"
+          RANGE="${PREV:+$PREV..}HEAD"
+          BODY=$(bash scripts/release-notes.sh "$RANGE" "$REPO" "$VERSION" "$PREV")
+          jq -n --arg t "$BODY" '{text:$t}' \
+            | curl -sSf -X POST -H 'Content-type: application/json' -d @- "$SLACK_WEBHOOK"
