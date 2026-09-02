@@ -605,6 +605,7 @@ export class PromptCore {
           path.path_type === PathType.BOTTOM_BANNER
       ) ?? [];
 
+    let delaySeconds = 0;
     let fallbackResult: PromptResult = {
       code: PromptResultCode.NOT_APPLICABLE,
       value: { error: `applicable Prompt not found` },
@@ -616,9 +617,10 @@ export class PromptCore {
         const useRegex = trigger.use_regex;
         const matched = nameMatches(urlPath, this.currentScreenName, useRegex);
         if (matched) {
-          return (
-            (!trigger.click_id && !clickId) || trigger.click_id === clickId
-          );
+          if ((!trigger.click_id && !clickId) || trigger.click_id === clickId) {
+            delaySeconds = trigger.delay_seconds ?? 0;
+            return true;
+          }
         }
         return false;
       });
@@ -642,7 +644,7 @@ export class PromptCore {
         continue;
       }
 
-      return { path, delaySeconds: matchedTrigger.delay_seconds ?? 0 };
+      return { path, delaySeconds };
     }
 
     return {
