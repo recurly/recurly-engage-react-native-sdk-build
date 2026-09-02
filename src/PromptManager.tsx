@@ -24,9 +24,9 @@ import {
   usePrompt,
   type PromptAction,
 } from './usePrompt';
-import pkg from '../package.json';
+import { version } from './version';
 
-console.log(`@recurly/engage-react-native ${pkg.version}`);
+console.log(`@recurly/engage-react-native ${version}`);
 
 interface PromptProviderProps {
   children: ReactNode;

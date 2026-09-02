@@ -90,7 +90,8 @@ nitrogen/
 .npmrc
 **/coverage
 
-# generated at build/test time from package.json (see engage-core/version.js)
+# generated at build/test time from package.json (see engage-core/version.js, version.js)
 engage-core/src/version.ts
+src/version.ts
 # Claude Code local config / commands (internal tooling — not for public repo)
 .claude/
