@@ -18,6 +18,7 @@ import { getAllMovies } from './utils/webflow';
 import type { ImageURISource } from 'react-native';
 import { usePrompt, RecurlyInline } from '@recurly/engage-react-native';
 import type { PathItem } from '@recurly/engage-core';
+import DevMenu from './DevMenu';
 
 interface Row {
   id: string;
@@ -229,6 +230,7 @@ export default function HomeScreen() {
       >
         <FootNote message="Reset Prompts" color="blue" />
       </TouchableOpacity>
+      <DevMenu screenName="home" />
     </View>
   );
 }

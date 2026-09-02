@@ -4,6 +4,7 @@ import {
   PromptResultCode,
   InlineType,
   getPathTypeName,
+  PrivacyConsentCategory,
 } from './types';
 import type {
   ActionsData,
@@ -491,6 +492,7 @@ export class PromptCore {
   private currentScreenName: string;
   private actions?: ActionsData = undefined;
   private localStorage: LocalStorageUtils;
+  private privacyConsentCategories?: PrivacyConsentCategory[];
 
   private async pingHandler(): Promise<void> {
     try {
@@ -552,6 +554,32 @@ export class PromptCore {
     this.promptEnabled = enabled;
   }
 
+  setPrivacyConsentCategories(categories: PrivacyConsentCategory[]) {
+    this.privacyConsentCategories = categories;
+  }
+
+  getPrivacyConsentCategories(): PrivacyConsentCategory[] | undefined {
+    return this.privacyConsentCategories;
+  }
+
+  private matchPrivacyConsentCategories(path: PathItem) {
+    if (this.privacyConsentCategories) {
+      if (
+        this.privacyConsentCategories.length === path.consent_categories?.length
+      ) {
+        const sortedConsentCategories = this.privacyConsentCategories.sort();
+        const promptSortedConsentCategories = path.consent_categories.sort();
+
+        return sortedConsentCategories.every(
+          (value, index) => value === promptSortedConsentCategories[index]
+        );
+      } else {
+        return false;
+      }
+    }
+    return true;
+  }
+
   private async getPath(clickId: string): Promise<CandidatePathItem> {
     const nameMatches = (
       nameSrc: string,
@@ -577,50 +605,50 @@ export class PromptCore {
           path.path_type === PathType.BOTTOM_BANNER
       ) ?? [];
 
-    let delaySeconds = 0;
-    const matchedPath = paths.find((path) => {
+    let fallbackResult: PromptResult = {
+      code: PromptResultCode.NOT_APPLICABLE,
+      value: { error: `applicable Prompt not found` },
+    };
+
+    for (const path of paths) {
       const matchedTrigger = path.triggers?.find((trigger) => {
         const urlPath = trigger.url_path;
         const useRegex = trigger.use_regex;
         const matched = nameMatches(urlPath, this.currentScreenName, useRegex);
         if (matched) {
-          if ((!trigger.click_id && !clickId) || trigger.click_id === clickId) {
-            delaySeconds = trigger.delay_seconds ?? 0;
-            return true;
-          }
+          return (
+            (!trigger.click_id && !clickId) || trigger.click_id === clickId
+          );
         }
         return false;
       });
-      return matchedTrigger;
-    });
-    if (matchedPath) {
-      const suppressed = await this.isSuppressedByHoldout(matchedPath);
+
+      if (!matchedTrigger) {
+        continue;
+      }
+
+      const suppressed = await this.isSuppressedByHoldout(path);
       if (suppressed) {
-        return {
-          path: undefined,
-          delaySeconds: 0,
-          result: { code: PromptResultCode.HOLDOUT },
-        };
+        fallbackResult = { code: PromptResultCode.HOLDOUT };
+        continue;
       }
-      const overlayEnabled = await this.localStorage.isOverlayEnabled(
-        matchedPath.id
-      );
+      const overlayEnabled = await this.localStorage.isOverlayEnabled(path.id);
       if (!overlayEnabled) {
-        return {
-          path: undefined,
-          delaySeconds: 0,
-          result: { code: PromptResultCode.SUPPRESSED },
-        };
+        fallbackResult = { code: PromptResultCode.SUPPRESSED };
+        continue;
       }
-      return { path: matchedPath, delaySeconds };
+      if (!this.matchPrivacyConsentCategories(path)) {
+        fallbackResult = { code: PromptResultCode.NOT_APPLICABLE };
+        continue;
+      }
+
+      return { path, delaySeconds: matchedTrigger.delay_seconds ?? 0 };
     }
+
     return {
       path: undefined,
       delaySeconds: 0,
-      result: {
-        code: PromptResultCode.NOT_APPLICABLE,
-        value: { error: `applicable Prompt not found` },
-      },
+      result: fallbackResult,
     };
   }
 
@@ -768,11 +796,13 @@ export class PromptCore {
       let inlines: PathItem[] = [];
       for (const path of this.actions?.paths ?? []) {
         const isSuppressed = await this.isSuppressedByHoldout(path);
+        const matchPrivacyConsent = this.matchPrivacyConsentCategories(path);
         if (
-          (!isSuppressed &&
-            path.actions.rf_settings_zone_id &&
+          matchPrivacyConsent &&
+          !isSuppressed &&
+          ((path.actions.rf_settings_zone_id &&
             path.actions.rf_settings_zone_id === type) ||
-          type === InlineType.all
+            type === InlineType.all)
         ) {
           inlines.push(path);
         }
@@ -829,7 +859,13 @@ export class PromptCore {
   }
 
   private path2Prompt(pathItem: PathItem): Prompt {
-    const { id, path_type, actions, action_group_id: actionGroupId } = pathItem;
+    const {
+      id,
+      path_type,
+      actions,
+      action_group_id: actionGroupId,
+      consent_categories,
+    } = pathItem;
     const {
       rf_settings_deeplink,
       rf_metadata,
@@ -954,6 +990,7 @@ export class PromptCore {
       countDown,
       horizontalPoster,
       accessibilityLabel,
+      consent_categories,
       impression: async () =>
         safeApiCall(
           async () => this.api.impression(id, actionGroupId),
@@ -1012,9 +1049,11 @@ export class PromptCore {
     try {
       const pathItems =
         this.actions?.paths?.filter((path) => {
+          const matchPrivacyConsent = this.matchPrivacyConsentCategories(path);
           if (
-            path.path_type === (type as PathType) ||
-            PathType.ALL === (type as PathType)
+            matchPrivacyConsent &&
+            (path.path_type === (type as PathType) ||
+              PathType.ALL === (type as PathType))
           ) {
             if (!zoneId) return true;
             if (zoneId && zoneId === path.actions.rf_settings_zone_id)
