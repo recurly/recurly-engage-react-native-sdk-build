@@ -11,6 +11,7 @@ import {
   PromptResultCode,
   InlineType,
   getPathTypeName,
+  PrivacyConsentCategory,
 } from '../types';
 import type {
   DeviceInfo,
@@ -884,6 +885,128 @@ describe('PromptCore', () => {
     });
   });
 
+  // ── setPrivacyConsentCategories / getPrivacyConsentCategories ──
+
+  describe('setPrivacyConsentCategories / getPrivacyConsentCategories', () => {
+    it('returns undefined before any categories are set', () => {
+      const core = createCore();
+      expect(core.getPrivacyConsentCategories()).toBeUndefined();
+    });
+
+    it('stores and returns the categories that were set', () => {
+      const core = createCore();
+      core.setPrivacyConsentCategories([PrivacyConsentCategory.performance]);
+      expect(core.getPrivacyConsentCategories()).toEqual([
+        PrivacyConsentCategory.performance,
+      ]);
+    });
+  });
+
+  // ── onScreenChanged — privacy consent category filtering ──
+
+  describe('onScreenChanged — privacy consent category filtering', () => {
+    it('matches when consent categories match regardless of order', async () => {
+      const path = makePathItem({
+        path_type: PathType.MODAL,
+        triggers: [{ url_path: 'Home', use_regex: false }],
+        consent_categories: [
+          PrivacyConsentCategory.targeting,
+          PrivacyConsentCategory.performance,
+        ],
+      });
+      const core = createCore(makeActionsData([path]));
+      await flushPing();
+      core.setPrivacyConsentCategories([
+        PrivacyConsentCategory.performance,
+        PrivacyConsentCategory.targeting,
+      ]);
+      const result = await core.onScreenChanged('Home');
+      expect(result.path?.id).toBe('path-1');
+    });
+
+    it('returns NOT_APPLICABLE when consent categories differ in value', async () => {
+      const path = makePathItem({
+        path_type: PathType.MODAL,
+        triggers: [{ url_path: 'Home', use_regex: false }],
+        consent_categories: [PrivacyConsentCategory.performance],
+      });
+      const core = createCore(makeActionsData([path]));
+      await flushPing();
+      core.setPrivacyConsentCategories([PrivacyConsentCategory.targeting]);
+      const result = await core.onScreenChanged('Home');
+      expect(result.result?.code).toBe(PromptResultCode.NOT_APPLICABLE);
+      expect(result.path).toBeUndefined();
+    });
+
+    it('returns NOT_APPLICABLE when path has no consent categories at all', async () => {
+      const path = makePathItem({
+        path_type: PathType.MODAL,
+        triggers: [{ url_path: 'Home', use_regex: false }],
+      });
+      const core = createCore(makeActionsData([path]));
+      await flushPing();
+      core.setPrivacyConsentCategories([PrivacyConsentCategory.performance]);
+      const result = await core.onScreenChanged('Home');
+      expect(result.result?.code).toBe(PromptResultCode.NOT_APPLICABLE);
+    });
+
+    it('returns NOT_APPLICABLE when consent categories differ in length', async () => {
+      const path = makePathItem({
+        path_type: PathType.MODAL,
+        triggers: [{ url_path: 'Home', use_regex: false }],
+        consent_categories: [PrivacyConsentCategory.performance],
+      });
+      const core = createCore(makeActionsData([path]));
+      await flushPing();
+      core.setPrivacyConsentCategories([
+        PrivacyConsentCategory.performance,
+        PrivacyConsentCategory.targeting,
+      ]);
+      const result = await core.onScreenChanged('Home');
+      expect(result.result?.code).toBe(PromptResultCode.NOT_APPLICABLE);
+    });
+
+    it('when multiple candidates share the same matching consent categories, returns the first eligible one', async () => {
+      const path1 = makePathItem({
+        id: 'first',
+        path_type: PathType.MODAL,
+        triggers: [{ url_path: 'Home', use_regex: false }],
+        consent_categories: [PrivacyConsentCategory.performance],
+      });
+      const path2 = makePathItem({
+        id: 'second',
+        path_type: PathType.MODAL,
+        triggers: [{ url_path: 'Home', use_regex: false }],
+        consent_categories: [PrivacyConsentCategory.performance],
+      });
+      const core = createCore(makeActionsData([path1, path2]));
+      await flushPing();
+      core.setPrivacyConsentCategories([PrivacyConsentCategory.performance]);
+      const result = await core.onScreenChanged('Home');
+      expect(result.path?.id).toBe('first');
+    });
+
+    it('skips a consent-blocked candidate and matches the next eligible one', async () => {
+      const blocked = makePathItem({
+        id: 'blocked',
+        path_type: PathType.MODAL,
+        triggers: [{ url_path: 'Home', use_regex: false }],
+        consent_categories: [PrivacyConsentCategory.targeting],
+      });
+      const allowed = makePathItem({
+        id: 'allowed',
+        path_type: PathType.MODAL,
+        triggers: [{ url_path: 'Home', use_regex: false }],
+        consent_categories: [PrivacyConsentCategory.performance],
+      });
+      const core = createCore(makeActionsData([blocked, allowed]));
+      await flushPing();
+      core.setPrivacyConsentCategories([PrivacyConsentCategory.performance]);
+      const result = await core.onScreenChanged('Home');
+      expect(result.path?.id).toBe('allowed');
+    });
+  });
+
   // ── onButtonClicked ──
 
   describe('onButtonClicked', () => {
@@ -1029,6 +1152,32 @@ describe('PromptCore', () => {
       expect(result.length).toBe(1);
     });
 
+    it('excludes consent-blocked paths even for InlineType.all', async () => {
+      const path = makePathItem({
+        actions: makeActions({ rf_settings_zone_id: 'something' }),
+        consent_categories: [PrivacyConsentCategory.targeting],
+      });
+      const core = createCore(makeActionsData([path]));
+      await flushPing();
+      core.setPrivacyConsentCategories([PrivacyConsentCategory.performance]);
+      const result = await core.getInlines(InlineType.all);
+      expect(result).toEqual([]);
+    });
+
+    it('excludes holdout-suppressed paths even for InlineType.all', async () => {
+      const path = makePathItem({
+        holdout: true,
+        actions: makeActions({ rf_settings_zone_id: 'something' }),
+      });
+      fetchMock
+        .mockResolvedValueOnce(makeOkResponse(makeActionsData([path]))) // ping
+        .mockResolvedValueOnce(makeOkResponse({ success: true })); // holdout
+      const core = new PromptCore('app-1', 'user-1', device, localStorage);
+      await flushPing();
+      const result = await core.getInlines(InlineType.all);
+      expect(result).toEqual([]);
+    });
+
     it('returns at most one path (first by order)', async () => {
       const path1 = makePathItem({
         id: 'p1',
@@ -1042,6 +1191,33 @@ describe('PromptCore', () => {
       });
       const core = createCore(makeActionsData([path1, path2]));
       await flushPing();
+      const result = await core.getInlines(InlineType.general);
+      expect(result.length).toBe(1);
+      expect(result[0]!.id).toBe('p2');
+    });
+
+    it('when multiple candidates match the same consent categories, picks the lowest-order survivor', async () => {
+      const path1 = makePathItem({
+        id: 'p1',
+        order: 2,
+        actions: makeActions({ rf_settings_zone_id: InlineType.general }),
+        consent_categories: [PrivacyConsentCategory.performance],
+      });
+      const path2 = makePathItem({
+        id: 'p2',
+        order: 1,
+        actions: makeActions({ rf_settings_zone_id: InlineType.general }),
+        consent_categories: [PrivacyConsentCategory.performance],
+      });
+      const path3 = makePathItem({
+        id: 'p3',
+        order: 0,
+        actions: makeActions({ rf_settings_zone_id: InlineType.general }),
+        consent_categories: [PrivacyConsentCategory.targeting],
+      });
+      const core = createCore(makeActionsData([path1, path2, path3]));
+      await flushPing();
+      core.setPrivacyConsentCategories([PrivacyConsentCategory.performance]);
       const result = await core.getInlines(InlineType.general);
       expect(result.length).toBe(1);
       expect(result[0]!.id).toBe('p2');
@@ -1296,6 +1472,29 @@ describe('PromptCore', () => {
       const result = core.getPrompts(PathType.HORIZONTAL, 'zone-a');
       expect(result.length).toBe(1);
       expect(result[0]!.id).toBe('p1');
+    });
+
+    it('returns every candidate that matches the same consent categories', async () => {
+      const p1 = makePathItem({
+        id: 'p1',
+        path_type: PathType.MODAL,
+        consent_categories: [PrivacyConsentCategory.performance],
+      });
+      const p2 = makePathItem({
+        id: 'p2',
+        path_type: PathType.MODAL,
+        consent_categories: [PrivacyConsentCategory.performance],
+      });
+      const p3 = makePathItem({
+        id: 'p3',
+        path_type: PathType.MODAL,
+        consent_categories: [PrivacyConsentCategory.targeting],
+      });
+      const core = createCore(makeActionsData([p1, p2, p3]));
+      await flushPing();
+      core.setPrivacyConsentCategories([PrivacyConsentCategory.performance]);
+      const result = core.getPrompts(PathType.MODAL);
+      expect(result.map((p) => p!.id).sort()).toEqual(['p1', 'p2']);
     });
 
     it('returns empty array on error', async () => {

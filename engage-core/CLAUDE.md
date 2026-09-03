@@ -42,6 +42,7 @@ Key methods:
 - `resetGoal()` — clears local suppression keys and calls `goalResetAll` on the server
 - `enablePrompt(enabled)` — gates all prompts on/off
 - `setUserId(userId)` / `getUserId()`
+- `setPrivacyConsentCategories(categories)` / `getPrivacyConsentCategories()` — gates prompt eligibility by `PrivacyConsentCategory`; see below
 
 ### Param extraction functions
 
@@ -68,6 +69,14 @@ Key methods:
 
 Error range: `ERROR=-100`, `NOT_APPLICABLE=-101`, `DISABLED=-102`, `SUPPRESSED=-103`.
 Interaction range: `IMPRESSION=100`, `BUTTON1=101`, `BUTTON2=102`, `BUTTON3=103`, `DISMISS=110`, `TIMEOUT=111`, `HOLDOUT=120`.
+
+### Privacy consent filtering
+
+`PathItem.consent_categories?: string[]` (configured in Pulse) is matched against the categories set via `setPrivacyConsentCategories(categories: PrivacyConsentCategory[])`. `matchPrivacyConsentCategories(path)` (private) is called from `getPath()` (screen/click triggering), `getInlines()`, `path2Prompt()`/`getPrompts()`:
+- No categories set (`privacyConsentCategories === undefined`) → every path matches (filtering is off by default).
+- Categories set → a path matches only if its `consent_categories` is an exact set match (same length, same values, order-independent) of the configured categories. A path with no `consent_categories` never matches once categories are set.
+- In `getPath()`, a path blocked by consent (or holdout/suppression) doesn't short-circuit the whole lookup — it falls back to `NOT_APPLICABLE` and the loop continues to the next candidate path.
+- `PrivacyConsentCategory` enum (`strictlyNecessary`, `performance`, `functional`, `targeting`) lives in `types.ts`.
 
 ## Key Conventions
 

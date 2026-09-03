@@ -83,7 +83,7 @@ Builds on top of `engage-core`. Key files:
 - Background images are selected per device via `getImageCompositeFieldName()` which constructs field names like `rf_settings_bg_image_ios_iphone_2x_composite`
 
 ### 3. `example/`, `example-tv/`, `example-vega/` — example apps
-- `example/` — standard React Native (Expo) mobile app
+- `example/` — standard React Native (Expo) mobile app; `example/src/DevMenu.tsx` is a debug panel for toggling `PrivacyConsentCategory` values at runtime and re-triggering `promptMgr.screenChanged()` to see the resulting match
 - `example-tv/` — Expo TV app (Apple TV / Android TV); uses `expo start` + Xcode for physical device
 - `example-vega/` — Amazon Fire TV (Vega/kepler) example
 

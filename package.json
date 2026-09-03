@@ -1,6 +1,6 @@
 {
   "name": "@recurly/engage-react-native",
-  "version": "3.0.1",
+  "version": "3.0.2",
   "description": "React Native SDK for Recurly Engage",
   "source": "./src/index.tsx",
   "main": "./lib/commonjs/index.js",

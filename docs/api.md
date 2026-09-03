@@ -136,6 +136,38 @@ You may change the userID after the SDK has been initialized, for example, when 
 promptMgr.setUserId(userId);
 ```
 
+## Privacy consent categories
+
+If your app gates data collection behind a consent banner or preference center, you can restrict which prompts are eligible to show based on the consent categories the user has granted. Prompts configured in Pulse with `consent_categories` will only be shown once the categories you set match exactly.
+
+```javascript
+import { PrivacyConsentCategory } from '@recurly/engage-core';
+
+// Set the categories the user has consented to (e.g. from your consent banner)
+promptMgr.setPrivacyConsentCategories([
+  PrivacyConsentCategory.strictlyNecessary,
+  PrivacyConsentCategory.performance,
+]);
+
+// Read back the categories currently set
+promptMgr.getPrivacyConsentCategories();
+
+/*
+Available categories:
+  PrivacyConsentCategory.strictlyNecessary // 'strictly_necessary'
+  PrivacyConsentCategory.performance       // 'performance'
+  PrivacyConsentCategory.functional        // 'functional'
+  PrivacyConsentCategory.targeting         // 'targeting'
+*/
+```
+
+Matching behavior:
+
+- Before `setPrivacyConsentCategories` is called, no filtering is applied — all prompts remain eligible regardless of their `consent_categories`.
+- Once set, a prompt is only eligible when its `consent_categories` are an exact match (same categories, order doesn't matter) to the categories you set. A prompt configured without `consent_categories` will never match once any categories have been set.
+- The filter applies everywhere prompts are resolved: `screenChanged` / `buttonClicked` triggering, inline zones (`getInlines` / `<RecurlyInline>`), and custom rendering (`getPrompts`, `getTriggerablePrompts`).
+- Whenever consent changes (e.g. the user updates their preferences), call `setPrivacyConsentCategories` again and re-trigger the current screen (`promptMgr.screenChanged(currentScreen)`) so eligibility is re-evaluated.
+
 ## Render modal prompts
 
 Interstitial, Popup and Bottom Banner modals may be triggered upon entering a screen and/or the user registering a click on an element. Add the following code to screens that are eligible to show a modal.
@@ -285,6 +317,7 @@ interface Prompt {
   countDownPromptInvisible: boolean;
   countDown: number;
   horizontalPoster?: string;
+  consent_categories?: string[];
   impression: () => Promise<PromptResult>;
   dismiss: () => Promise<PromptResult>;
   timeout: () => Promise<PromptResult>;

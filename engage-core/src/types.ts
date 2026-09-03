@@ -225,6 +225,7 @@ export interface PathItem {
   triggers?: Trigger[];
   order: number;
   sequence?: Sequence;
+  consent_categories?: string[];
 }
 
 export interface Usage {
@@ -384,6 +385,7 @@ export interface Prompt {
   countDown: number;
   horizontalPoster?: string;
   accessibilityLabel?: string;
+  consent_categories?: string[];
   impression: () => Promise<PromptResult>;
   dismiss: () => Promise<PromptResult>;
   timeout: () => Promise<PromptResult>;
@@ -393,4 +395,11 @@ export interface Prompt {
   decline: () => Promise<PromptResult>;
   // internal
   pathItem: PathItem;
+}
+
+export enum PrivacyConsentCategory {
+  strictlyNecessary = 'strictly_necessary',
+  performance = 'performance',
+  functional = 'functional',
+  targeting = 'targeting',
 }
