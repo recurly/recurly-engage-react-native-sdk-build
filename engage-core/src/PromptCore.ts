@@ -526,9 +526,10 @@ export class PromptCore {
     appId: string,
     userId: string,
     device: DeviceInfo,
-    localStorage: LocalStorage
+    localStorage: LocalStorage,
+    baseUrl?: string
   ) {
-    this.api = new PromptApi(appId, userId, device);
+    this.api = new PromptApi(appId, userId, device, baseUrl);
     this.currentScreenName = '';
     this.localStorage = new LocalStorageUtils(localStorage);
     this.pingHandler();

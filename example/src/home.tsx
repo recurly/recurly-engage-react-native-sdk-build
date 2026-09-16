@@ -94,6 +94,7 @@ const FootNote = ({
 
 export default function HomeScreen() {
   const [rowList, setRowList] = React.useState<Row[]>([]);
+  const navigation = useNavigation<HomeScreenNavigationProp>();
   const {
     dispatch,
     state: { promptMgr },
@@ -229,6 +230,9 @@ export default function HomeScreen() {
         }}
       >
         <FootNote message="Reset Prompts" color="blue" />
+      </TouchableOpacity>
+      <TouchableOpacity onPress={() => navigation.navigate('DevTools')}>
+        <FootNote message="Open Dev Tools" color="green" />
       </TouchableOpacity>
       <DevMenu screenName="home" />
     </View>

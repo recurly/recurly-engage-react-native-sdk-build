@@ -1,6 +1,9 @@
 import { createStackNavigator } from '@react-navigation/stack';
 import HomeScreen from './home';
 import MovieDetailScreen from './detail';
+import DevToolsScreen from './DevToolsScreen';
+import DevInlinePreviewScreen from './DevInlinePreviewScreen';
+import DevBlankScreen from './DevBlankScreen';
 import { NavigationContainer } from '@react-navigation/native';
 import {
   PromptAction_Font_Button,
@@ -13,8 +16,21 @@ import {
 import React from 'react';
 import type { PromptResult } from '@recurly/engage-core';
 import { useFonts } from 'expo-font';
+import {
+  loadDevSettings,
+  baseUrlForEnvironment,
+  effectiveAppId,
+  effectiveUserId,
+  type DevSettingsValue,
+} from './DevSettings';
 
 const Stack = createStackNavigator();
+
+// Lets DevToolsScreen persist new overrides and remount the SDK without
+// requiring a real app restart (unlike the native SDKs' "quit and relaunch").
+export const DevRestartContext = React.createContext<() => Promise<void>>(
+  async () => {}
+);
 
 const AppRoot: React.FC = () => {
   const {
@@ -56,6 +72,12 @@ const AppRoot: React.FC = () => {
         <Stack.Navigator screenOptions={{ headerShown: true }}>
           <Stack.Screen name="Home" component={HomeScreen} />
           <Stack.Screen name="MovieDetail" component={MovieDetailScreen} />
+          <Stack.Screen name="DevTools" component={DevToolsScreen} />
+          <Stack.Screen
+            name="DevInlinePreview"
+            component={DevInlinePreviewScreen}
+          />
+          <Stack.Screen name="DevBlankScreen" component={DevBlankScreen} />
         </Stack.Navigator>
       )}
       <PromptOverlay
@@ -68,9 +90,31 @@ const AppRoot: React.FC = () => {
 };
 
 export default function App() {
+  const [settings, setSettings] = React.useState<DevSettingsValue | null>(null);
+  const [instanceKey, setInstanceKey] = React.useState(0);
+
+  React.useEffect(() => {
+    loadDevSettings().then(setSettings);
+  }, []);
+
+  const restartSdk = React.useCallback(async () => {
+    const fresh = await loadDevSettings();
+    setSettings(fresh);
+    setInstanceKey((key) => key + 1);
+  }, []);
+
+  if (!settings) return null;
+
   return (
-    <PromptProvider appId="6b233605-b981-4d6d-8b45-efa7fc402388" userId="123">
-      <AppRoot />
-    </PromptProvider>
+    <DevRestartContext.Provider value={restartSdk}>
+      <PromptProvider
+        key={instanceKey}
+        appId={effectiveAppId(settings)}
+        userId={effectiveUserId(settings)}
+        baseUrl={baseUrlForEnvironment(settings.environment)}
+      >
+        <AppRoot />
+      </PromptProvider>
+    </DevRestartContext.Provider>
   );
 }

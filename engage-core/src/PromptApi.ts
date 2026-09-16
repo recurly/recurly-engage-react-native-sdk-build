@@ -32,13 +32,20 @@ export class PromptApi {
   private device: DeviceInfo;
   private appId: string;
   private userId: string;
+  private baseUrl: string;
 
-  constructor(appId: string, userId: string, device: DeviceInfo) {
+  constructor(
+    appId: string,
+    userId: string,
+    device: DeviceInfo,
+    baseUrl?: string
+  ) {
     this.appId = appId;
     this.userId = userId;
     this.device = device;
     this.etag = '';
     this.anonymousId = '';
+    this.baseUrl = baseUrl ?? BaseUrl;
   }
 
   getDevice() {
@@ -95,7 +102,7 @@ export class PromptApi {
     Object.keys(sanitized).forEach((key) => {
       searchParams.append(key, sanitized[key] as string);
     });
-    const url = `${BaseUrl}/${restApi}`;
+    const url = `${this.baseUrl}/${restApi}`;
     const queryString = searchParams.toString();
     return queryString ? `${url}?${queryString}` : url;
   }
