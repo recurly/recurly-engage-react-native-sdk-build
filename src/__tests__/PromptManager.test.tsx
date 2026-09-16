@@ -1,5 +1,6 @@
 import { create, act } from 'react-test-renderer';
 import { Platform, Dimensions } from 'react-native';
+import { version } from '../version';
 
 // ── mock values ─────────────────────────────────────────────────────────
 
@@ -487,6 +488,7 @@ describe('PromptManager', () => {
         isPad: true,
         isTV: false,
         constants: { systemName: 'iPadOS' },
+        Version: '17.4',
       });
 
       new PromptManager('app-id', 'user-1', jest.fn());
@@ -497,6 +499,8 @@ describe('PromptManager', () => {
           device_category: 'ipad',
           device_form: 'tablet',
           device_manufacturer: 'Apple',
+          os_version: '17.4',
+          sdk_version: version,
         })
       );
     });
@@ -529,6 +533,7 @@ describe('PromptManager', () => {
           Manufacturer: 'Samsung',
           Model: 'Galaxy S21',
           uiMode: 'normal',
+          Release: '13',
         },
       });
       mockDeviceType = 1; // PHONE
@@ -542,6 +547,30 @@ describe('PromptManager', () => {
           device_form: 'phone',
           device_manufacturer: 'Samsung',
           device_model: 'Galaxy S21',
+          os_version: '13',
+          sdk_version: version,
+        })
+      );
+    });
+
+    it('falls back to Platform.Version when Android Release is unavailable', () => {
+      setPlatform({
+        OS: 'android',
+        isTV: false,
+        constants: {
+          Manufacturer: 'Samsung',
+          Model: 'Galaxy S21',
+          uiMode: 'normal',
+        },
+        Version: 33,
+      });
+      mockDeviceType = 1; // PHONE
+
+      new PromptManager('app-id', 'user-1', jest.fn());
+
+      expect(mockSetGlobalDeviceInfo).toHaveBeenCalledWith(
+        expect.objectContaining({
+          os_version: '33',
         })
       );
     });
@@ -605,6 +634,8 @@ describe('PromptManager', () => {
           device_form: 'tv',
           device_manufacturer: 'Amazon',
           device_model: 'Vega',
+          os_version: 'unknown',
+          sdk_version: version,
         })
       );
     });
@@ -621,6 +652,8 @@ describe('PromptManager', () => {
           device_form: 'unknown',
           device_manufacturer: 'unknown',
           device_model: 'unknown',
+          os_version: 'unknown',
+          sdk_version: version,
         })
       );
     });

@@ -7,6 +7,8 @@ const mockDevice: DeviceInfo = {
   device_type: 'ios',
   device_category: 'iphone',
   device_form: 'phone',
+  sdk_version: '3.0.1',
+  os_version: '17.4',
 };
 
 function makeOkResponse(body: any = {}, etag: string | null = null): Response {
@@ -405,6 +407,8 @@ describe('PromptApi', () => {
         device_type: 'ios',
         device_category: 'iphone',
         device_form: 'phone',
+        sdk_version: '3.0.1',
+        os_version: '17.4',
         id: 'app-123',
         foo: 'bar',
       });

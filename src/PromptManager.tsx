@@ -184,12 +184,14 @@ const initDeviceInfo = () => {
   let modelName = 'unknown';
   let category = 'unknown';
   let form = 'unknown';
+  let osVersion = 'unknown';
 
   switch (Platform.OS) {
     case 'ios':
       os = Platform.isTV ? 'tv_os' : 'ios';
       manufacturer = 'Apple';
       modelName = Platform.constants.systemName;
+      osVersion = String(Platform.Version);
       if (Platform.isPad) {
         category = 'ipad';
         form = 'tablet';
@@ -205,6 +207,7 @@ const initDeviceInfo = () => {
       os = Platform.constants?.uiMode === 'tv' ? 'android_tv' : 'android_os';
       manufacturer = Platform.constants.Manufacturer;
       modelName = Platform.constants.Model;
+      osVersion = String(Platform.constants?.Release ?? Platform.Version);
       if (Platform.constants.uiMode === 'tv') {
         category = 'tv';
         form = 'tv';
@@ -237,6 +240,8 @@ const initDeviceInfo = () => {
     device_type: os,
     device_category: category,
     device_form: form,
+    sdk_version: version,
+    os_version: osVersion,
   };
   // @ts-ignore
   setGlobalDeviceInfo(deviceInfo);

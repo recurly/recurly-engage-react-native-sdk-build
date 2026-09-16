@@ -25,6 +25,8 @@ describe('setGlobalDeviceInfo', () => {
       device_type: 'ios',
       device_category: 'iphone',
       device_form: 'phone',
+      sdk_version: '3.0.1',
+      os_version: '17.4',
     };
     setGlobalDeviceInfo(info);
 
@@ -44,6 +46,8 @@ describe('getImageCompositeFieldName', () => {
       device_type: 'unknown',
       device_category: 'unknown',
       device_form: 'phone',
+      sdk_version: 'unknown',
+      os_version: 'unknown',
     });
   });
 
@@ -54,6 +58,8 @@ describe('getImageCompositeFieldName', () => {
       device_type: 'ios',
       device_category: 'iphone',
       device_form: 'phone',
+      sdk_version: '3.0.1',
+      os_version: '17.4',
     });
     expect(getImageCompositeFieldName()).toBe(
       'rf_settings_bg_image_ios_iphone_composite'
@@ -67,6 +73,8 @@ describe('getImageCompositeFieldName', () => {
       device_type: 'android_os',
       device_category: 'tablet',
       device_form: 'tablet',
+      sdk_version: '3.0.1',
+      os_version: '13',
     });
     expect(getImageCompositeFieldName()).toBe(
       'rf_settings_bg_image_android_os_tablet_composite'
@@ -197,6 +205,8 @@ describe('dp', () => {
       device_type: 'android_tv',
       device_category: 'tv',
       device_form: 'tv',
+      sdk_version: '3.0.1',
+      os_version: '13',
     });
     expect(dp(200)).toBe(100);
   });
@@ -208,6 +218,8 @@ describe('dp', () => {
       device_type: 'tv_os',
       device_category: 'tv',
       device_form: 'tv',
+      sdk_version: '3.0.1',
+      os_version: '17.4',
     });
     expect(dp(200)).toBe(200);
   });
