@@ -75,6 +75,22 @@ describe('PromptApi', () => {
 
   // ── ping ──────────────────────────────────────────────────────────────────
 
+  describe('constructor() — custom baseUrl', () => {
+    it('uses the provided baseUrl for requests', async () => {
+      const customApi = new PromptApi(
+        'app-123',
+        'user-abc',
+        mockDevice,
+        'https://custom.example.com'
+      );
+      fetchMock.mockResolvedValue(makeOkResponse({}));
+      await customApi.ping({});
+      expect(fetchMock.mock.calls[0][0]).toMatch(
+        /^https:\/\/custom\.example\.com\//
+      );
+    });
+  });
+
   describe('ping()', () => {
     it('returns null for 304 Not Modified (before calling getJson)', async () => {
       fetchMock.mockResolvedValue(make304Response());
