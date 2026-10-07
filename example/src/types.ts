@@ -15,16 +15,34 @@ export interface Movie {
 
 type RootStackParamList = {
   MovieDetail: { movie: Movie };
+  DevTools: undefined;
+  DevInlinePreview: { zoneId: string };
+  DevBlankScreen: { screenName: string };
 };
 
 export type HomeScreenNavigationProp = StackNavigationProp<
   RootStackParamList,
-  'MovieDetail'
+  'MovieDetail' | 'DevTools'
 >;
 
 export type MovieDetailScreenRouteProp = RouteProp<
   RootStackParamList,
   'MovieDetail'
+>;
+
+export type DevToolsScreenNavigationProp = StackNavigationProp<
+  RootStackParamList,
+  'DevTools'
+>;
+
+export type DevInlinePreviewScreenRouteProp = RouteProp<
+  RootStackParamList,
+  'DevInlinePreview'
+>;
+
+export type DevBlankScreenRouteProp = RouteProp<
+  RootStackParamList,
+  'DevBlankScreen'
 >;
 
 export const logicPixelToDevicePixel = (lp: number = 0) => {

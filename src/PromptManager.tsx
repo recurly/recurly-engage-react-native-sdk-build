@@ -32,17 +32,19 @@ interface PromptProviderProps {
   children: ReactNode;
   appId: string;
   userId: string;
+  baseUrl?: string;
 }
 
 export const PromptProvider: React.FC<PromptProviderProps> = ({
   children,
   appId,
   userId,
+  baseUrl,
 }) => {
   const [state, dispatch] = React.useReducer(PromptReducer, initialState);
 
   React.useEffect(() => {
-    const promptMgr = new PromptManager(appId, userId, dispatch);
+    const promptMgr = new PromptManager(appId, userId, dispatch, baseUrl);
     dispatch({
       type: PromptAction_Init,
       data: promptMgr,
@@ -249,23 +251,30 @@ export class PromptManager extends PromptCore {
   constructor(
     appId: string,
     userId: string,
-    dispatch: React.Dispatch<PromptAction>
+    dispatch: React.Dispatch<PromptAction>,
+    baseUrl?: string
   ) {
     console.log(
       `screen resolution is ${Dimensions.get('window').width} * ${Dimensions.get('window').height}, pixel density ${PixelRatio.get()}`
     );
     initDeviceInfo();
-    super(appId, userId, gDeviceInfo, {
-      createKey: AsyncStorage.setItem,
-      getValue: async (key: string) => AsyncStorage.getItem(key),
-      deleteKey: AsyncStorage.removeItem,
-      hasKey: async (key: string): Promise<boolean> => {
-        const value = await AsyncStorage.getItem(key);
-        return value !== null;
+    super(
+      appId,
+      userId,
+      gDeviceInfo,
+      {
+        createKey: AsyncStorage.setItem,
+        getValue: async (key: string) => AsyncStorage.getItem(key),
+        deleteKey: AsyncStorage.removeItem,
+        hasKey: async (key: string): Promise<boolean> => {
+          const value = await AsyncStorage.getItem(key);
+          return value !== null;
+        },
+        getAllKeys: async (): Promise<readonly string[]> =>
+          AsyncStorage.getAllKeys(),
       },
-      getAllKeys: async (): Promise<readonly string[]> =>
-        AsyncStorage.getAllKeys(),
-    });
+      baseUrl
+    );
     this.dispatch = dispatch;
   }
 
