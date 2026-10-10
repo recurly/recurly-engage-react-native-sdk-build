@@ -29,6 +29,8 @@ const makeDevice = (): DeviceInfo => ({
   device_type: 'ios',
   device_category: 'iphone',
   device_form: 'phone',
+  sdk_version: '3.0.1',
+  os_version: '17.4',
 });
 
 const makeLocalStorage = (): LocalStorage => ({

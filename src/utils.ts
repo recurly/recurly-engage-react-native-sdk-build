@@ -7,6 +7,8 @@ export let gDeviceInfo: DeviceInfo = {
   device_type: 'unknown',
   device_category: 'unknown',
   device_form: 'phone',
+  sdk_version: 'unknown',
+  os_version: 'unknown',
 };
 
 export const setGlobalDeviceInfo = (deviceInfo: DeviceInfo) => {

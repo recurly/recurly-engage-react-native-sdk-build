@@ -11,6 +11,8 @@ export interface DeviceInfo {
     | 'fire_tv'
     | 'unknown';
   device_form: 'phone' | 'tablet' | 'tv';
+  sdk_version: string;
+  os_version: string;
 }
 
 export enum PathType {
